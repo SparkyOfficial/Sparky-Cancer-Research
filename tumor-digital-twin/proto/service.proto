@@ -1,0 +1,156 @@
+syntax = "proto3";
+
+package tumordtwin;
+
+import "patient_data.proto";
+import "simulation.proto";
+import "common.proto";
+
+// gRPC service definitions for Tumor Digital Twin
+
+// Request to start a new simulation
+message SimulationRequest {
+  string patient_id = 1;
+  PatientData data = 2;
+  SimulationParameters params = 3;
+  TreatmentProtocol treatment = 4;
+  string simulation_name = 5;
+}
+
+// Response after starting a simulation
+message SimulationResponse {
+  string simulation_id = 1;
+  SimulationStatus status = 2;
+  string message = 3;
+  int64 estimated_completion_time = 4;  // Unix timestamp
+}
+
+// Request to get simulation status
+message StatusRequest {
+  string simulation_id = 1;
+}
+
+// Response with simulation status
+message StatusResponse {
+  string simulation_id = 1;
+  SimulationStatus status = 2;
+  int32 current_step = 3;
+  int32 total_steps = 4;
+  double progress_percentage = 5;
+  int64 estimated_time_remaining = 6;  // Seconds
+  string message = 7;
+  SimulationMetrics current_metrics = 8;
+}
+
+// Request to get simulation results
+message ResultsRequest {
+  string simulation_id = 1;
+  bool include_agents = 2;
+  bool include_grid_data = 3;
+  repeated SubstanceType substances = 4;  // Which substances to include
+  int32 step_number = 5;  // Specific step, or -1 for final
+}
+
+// Chunk of results data (for streaming)
+message ResultsChunk {
+  string simulation_id = 1;
+  int32 chunk_number = 2;
+  int32 total_chunks = 3;
+  bytes data = 4;  // Serialized SimulationState or partial data
+  bool is_final = 5;
+}
+
+// Request to stop a running simulation
+message StopRequest {
+  string simulation_id = 1;
+  bool save_checkpoint = 2;
+}
+
+// Response after stopping a simulation
+message StopResponse {
+  string simulation_id = 1;
+  bool success = 2;
+  string message = 3;
+  string checkpoint_path = 4;
+}
+
+// Request to list simulations
+message ListRequest {
+  string patient_id = 1;  // Filter by patient, empty for all
+  SimulationStatus status = 2;  // Filter by status, UNSPECIFIED for all
+  int32 limit = 3;
+  int32 offset = 4;
+}
+
+// Simulation metadata summary
+message SimulationSummary {
+  string simulation_id = 1;
+  string patient_id = 2;
+  string simulation_name = 3;
+  SimulationStatus status = 4;
+  int64 created_at = 5;
+  int64 updated_at = 6;
+  int32 current_step = 7;
+  int32 total_steps = 8;
+  double progress_percentage = 9;
+}
+
+// Response with list of simulations
+message SimulationList {
+  repeated SimulationSummary simulations = 1;
+  int32 total_count = 2;
+}
+
+// Request to load a saved simulation
+message LoadSimulationRequest {
+  string simulation_id = 1;
+  string checkpoint_path = 2;
+}
+
+// Response after loading a simulation
+message LoadSimulationResponse {
+  string simulation_id = 1;
+  bool success = 2;
+  string message = 3;
+  SimulationState state = 4;
+}
+
+// Health check request
+message HealthCheckRequest {
+  string service = 1;
+}
+
+// Health check response
+message HealthCheckResponse {
+  enum ServingStatus {
+    UNKNOWN = 0;
+    SERVING = 1;
+    NOT_SERVING = 2;
+  }
+  ServingStatus status = 1;
+  string message = 2;
+}
+
+// Main simulation service
+service SimulationService {
+  // Start a new simulation
+  rpc StartSimulation(SimulationRequest) returns (SimulationResponse);
+  
+  // Get current status of a simulation
+  rpc GetSimulationStatus(StatusRequest) returns (StatusResponse);
+  
+  // Get simulation results (streaming for large data)
+  rpc GetSimulationResults(ResultsRequest) returns (stream ResultsChunk);
+  
+  // Stop a running simulation
+  rpc StopSimulation(StopRequest) returns (StopResponse);
+  
+  // List all simulations
+  rpc ListSimulations(ListRequest) returns (SimulationList);
+  
+  // Load a saved simulation
+  rpc LoadSimulation(LoadSimulationRequest) returns (LoadSimulationResponse);
+  
+  // Health check
+  rpc HealthCheck(HealthCheckRequest) returns (HealthCheckResponse);
+}

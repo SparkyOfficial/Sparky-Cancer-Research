@@ -1,0 +1,78 @@
+syntax = "proto3";
+
+package tumordtwin;
+
+// Common data types used across the system
+
+// 3D position in space
+message Position3D {
+  double x = 1;
+  double y = 2;
+  double z = 3;
+}
+
+// Agent (cell) types
+enum AgentType {
+  AGENT_TYPE_UNSPECIFIED = 0;
+  CANCER_CELL = 1;
+  T_CELL = 2;
+  MACROPHAGE = 3;
+  FIBROBLAST = 4;
+  ENDOTHELIAL = 5;
+}
+
+// Cell state
+enum CellState {
+  CELL_STATE_UNSPECIFIED = 0;
+  PROLIFERATING = 1;
+  QUIESCENT = 2;
+  APOPTOTIC = 3;
+  NECROTIC = 4;
+}
+
+// Simulation status
+enum SimulationStatus {
+  SIMULATION_STATUS_UNSPECIFIED = 0;
+  QUEUED = 1;
+  RUNNING = 2;
+  COMPLETED = 3;
+  FAILED = 4;
+  STOPPED = 5;
+}
+
+// Substance types in the grid
+enum SubstanceType {
+  SUBSTANCE_TYPE_UNSPECIFIED = 0;
+  OXYGEN = 1;
+  GLUCOSE = 2;
+  LACTATE = 3;
+  DRUG = 4;
+  GROWTH_FACTORS = 5;
+}
+
+// Agent (cell) representation
+message Agent {
+  uint64 id = 1;
+  AgentType type = 2;
+  Position3D position = 3;
+  CellState state = 4;
+  double age = 5;
+  double cycle_phase = 6;  // 0.0 to 1.0 (G1, S, G2, M)
+  bytes genotype_data = 7;  // Serialized genotype information
+}
+
+// Genotype mutation information
+message Genotype {
+  repeated int32 mutation_positions = 1;
+  repeated string driver_mutations = 2;
+}
+
+// Grid dimensions and metadata
+message GridMetadata {
+  int32 nx = 1;
+  int32 ny = 2;
+  int32 nz = 3;
+  double dx = 4;  // Spatial resolution in x
+  double dy = 5;  // Spatial resolution in y
+  double dz = 6;  // Spatial resolution in z
+}

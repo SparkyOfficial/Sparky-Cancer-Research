@@ -1,0 +1,133 @@
+syntax = "proto3";
+
+package tumordtwin;
+
+import "common.proto";
+
+// Simulation parameters and configuration
+
+// Drug information for treatment protocols
+message Drug {
+  string name = 1;
+  double diffusion_coefficient = 2;
+  double half_life = 3;
+  string mechanism = 4;  // cytotoxic, cytostatic, etc.
+  map<string, double> properties = 5;  // Additional drug properties
+}
+
+// Dosing schedule for a drug
+message DosingSchedule {
+  double dose_amount = 1;  // mg or other unit
+  double interval_hours = 2;
+  int32 num_doses = 3;
+  double start_time = 4;
+}
+
+// Treatment protocol with multiple drugs
+message TreatmentProtocol {
+  repeated Drug drugs = 1;
+  repeated DosingSchedule schedules = 2;
+  string protocol_name = 3;
+}
+
+// Simulation parameters
+message SimulationParameters {
+  // Grid configuration
+  int32 grid_size_x = 1;
+  int32 grid_size_y = 2;
+  int32 grid_size_z = 3;
+  double spatial_resolution = 4;  // Micrometers per voxel
+  
+  // Time configuration
+  int32 num_steps = 5;
+  double time_step = 6;  // Hours per step
+  
+  // Biological parameters
+  double mutation_rate = 7;
+  double division_rate = 8;
+  double death_rate = 9;
+  double migration_rate = 10;
+  
+  // Diffusion parameters
+  double oxygen_diffusion_coeff = 11;
+  double glucose_diffusion_coeff = 12;
+  
+  // Checkpointing
+  int32 checkpoint_interval = 13;
+  
+  // Parallelization hints
+  int32 num_threads = 14;
+  int32 num_mpi_ranks = 15;
+  bool use_gpu = 16;
+  
+  // Additional parameters
+  map<string, double> extra_params = 17;
+}
+
+// Subclone population information
+message SubcloneInfo {
+  bytes genotype_hash = 1;
+  int32 cell_count = 2;
+  double frequency = 3;
+  repeated string driver_mutations = 4;
+}
+
+// Simulation metrics at a specific time point
+message SimulationMetrics {
+  int32 step_number = 1;
+  double simulation_time = 2;
+  
+  // Cell counts
+  int64 total_cancer_cells = 3;
+  int64 total_immune_cells = 4;
+  int64 total_cells = 5;
+  
+  // Tumor characteristics
+  double tumor_volume = 6;
+  double tumor_radius = 7;
+  
+  // Subclonal composition
+  repeated SubcloneInfo subclones = 8;
+  
+  // Substance concentrations (average)
+  double avg_oxygen = 9;
+  double avg_glucose = 10;
+  double avg_drug_concentration = 11;
+  
+  // Additional metrics
+  map<string, double> extra_metrics = 12;
+}
+
+// Grid data for a specific substance
+message GridData {
+  GridMetadata metadata = 1;
+  SubstanceType substance = 2;
+  bytes values = 3;  // Flattened array of doubles (nx * ny * nz)
+  bool compressed = 4;
+}
+
+// Complete simulation state
+message SimulationState {
+  string simulation_id = 1;
+  string patient_id = 2;
+  int32 current_step = 3;
+  double current_time = 4;
+  SimulationStatus status = 5;
+  
+  // Agents (cells)
+  repeated Agent agents = 6;
+  
+  // Grid data
+  repeated GridData grids = 7;
+  
+  // Parameters used
+  SimulationParameters parameters = 8;
+  TreatmentProtocol treatment = 9;
+  
+  // Current metrics
+  SimulationMetrics metrics = 10;
+  
+  // Timestamps
+  int64 created_at = 11;
+  int64 updated_at = 12;
+}

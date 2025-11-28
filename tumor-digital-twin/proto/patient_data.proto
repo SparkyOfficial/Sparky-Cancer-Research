@@ -1,0 +1,45 @@
+syntax = "proto3";
+
+package tumordtwin;
+
+// Patient data structures for multimodal input
+
+// DICOM imaging data
+message DicomData {
+  bytes dicom_archive = 1;  // Compressed DICOM files
+  string patient_id = 2;
+  string study_date = 3;
+  string modality = 4;  // CT, MRI, PET, etc.
+}
+
+// Genomic mutation from VCF
+message Mutation {
+  string chromosome = 1;
+  int64 position = 2;
+  string reference_allele = 3;
+  string alternate_allele = 4;
+  string genotype = 5;
+  double allele_frequency = 6;
+}
+
+// VCF genomic data
+message VcfData {
+  repeated Mutation mutations = 1;
+  string sample_id = 2;
+}
+
+// Genomic sequence data (FASTQ/BAM)
+message GenomicSequenceData {
+  bytes bam_data = 1;  // BAM file content
+  bytes fastq_data = 2;  // FASTQ file content
+  string sample_id = 3;
+}
+
+// Complete patient data package
+message PatientData {
+  string patient_id = 1;
+  DicomData dicom = 2;
+  VcfData vcf = 3;
+  GenomicSequenceData genomic_sequences = 4;
+  map<string, string> metadata = 5;  // Additional patient metadata
+}
